@@ -140,12 +140,6 @@ CSV Export:
 - Download transactions only, with optional from-day and to-day filters.
 - Individual exported CSV sections can be copied again from the latest export list.
 
-Persistent Backup:
-
-- On Android, the app keeps an automatic SQLite backup in **Downloads > PersonalBudgetBackups**.
-- The backup is refreshed when the database opens and after data changes.
-- If the app is uninstalled and reinstalled, it restores from that phone backup when the private database is missing.
-
 Saving Goals:
 
 - Open **More > Saving Goals**.
