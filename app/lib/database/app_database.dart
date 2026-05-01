@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -348,106 +347,16 @@ class AppDatabase extends _$AppDatabase {
       }
     }
   }
-
-  Future<void> backupToPhoneStorage() async {
-    if (!Platform.isAndroid) return;
-    await customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
-    final file = await _databaseFile();
-    if (!await file.exists()) return;
-    final bytes = await file.readAsBytes();
-    try {
-      await _backupChannel.invokeMethod<String>('saveDatabaseBackup', {
-        'bytes': bytes,
-      });
-    } catch (_) {
-      // Android can block replacing public backup files created by an older install.
-      // Data changes should still succeed; Settings exposes manual cleanup.
-    }
-  }
-
-  Future<bool> restoreFromPhoneBackupPicker() async {
-    if (!Platform.isAndroid) return false;
-    final bytes = await _backupChannel.invokeMethod<Uint8List>(
-      'pickDatabaseBackup',
-    );
-    return _replaceDatabaseWithBackup(bytes);
-  }
-
-  Future<bool> restoreFromPhoneBackupFolder() async {
-    if (!Platform.isAndroid) return false;
-    final bytes = await _backupChannel.invokeMethod<Uint8List>(
-      'readDatabaseBackup',
-    );
-    return _replaceDatabaseWithBackup(bytes);
-  }
-
-  Future<bool> cleanPhoneBackupFolder() async {
-    if (!Platform.isAndroid) return false;
-    final cleaned = await _backupChannel.invokeMethod<bool>(
-      'cleanDatabaseBackups',
-    );
-    return cleaned ?? false;
-  }
-
-  Future<bool> _replaceDatabaseWithBackup(Uint8List? bytes) async {
-    if (bytes == null || bytes.isEmpty || !_looksLikeSqliteDatabase(bytes)) {
-      return false;
-    }
-
-    await customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
-    await close();
-
-    final file = await _databaseFile();
-    await file.parent.create(recursive: true);
-    await _deleteIfExists(File('${file.path}-wal'));
-    await _deleteIfExists(File('${file.path}-shm'));
-    await file.writeAsBytes(bytes, flush: true);
-    return true;
-  }
 }
 
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final file = await _databaseFile();
-    await _restoreDatabaseBackupIfNeeded(file);
     return NativeDatabase.createInBackground(file);
   });
 }
 
-const _backupChannel = MethodChannel('personal_budget_app/downloads');
-
 Future<File> _databaseFile() async {
   final dbFolder = await getApplicationDocumentsDirectory();
   return File(p.join(dbFolder.path, 'personal_budget.sqlite'));
-}
-
-Future<void> _restoreDatabaseBackupIfNeeded(File file) async {
-  if (!Platform.isAndroid || await file.exists()) return;
-  final bytes = await _backupChannel.invokeMethod<Uint8List>(
-    'readDatabaseBackup',
-  );
-  if (bytes == null || bytes.isEmpty || !_looksLikeSqliteDatabase(bytes)) {
-    return;
-  }
-  await file.parent.create(recursive: true);
-  await file.writeAsBytes(bytes, flush: true);
-}
-
-bool _looksLikeSqliteDatabase(Uint8List bytes) {
-  const sqliteHeader = 'SQLite format 3\u0000';
-  if (bytes.length < sqliteHeader.length) return false;
-  for (var i = 0; i < sqliteHeader.length; i++) {
-    if (bytes[i] != sqliteHeader.codeUnitAt(i)) return false;
-  }
-  return true;
-}
-
-Future<void> _deleteIfExists(File file) async {
-  try {
-    if (await file.exists()) {
-      await file.delete();
-    }
-  } catch (_) {
-    // A missing or locked sidecar file should not block restoring the main DB.
-  }
 }

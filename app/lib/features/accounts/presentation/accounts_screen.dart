@@ -131,6 +131,7 @@ class AccountsScreen extends ConsumerWidget {
 
     if (confirmed != true || !context.mounted) return;
     await ref.read(financeRepositoryProvider).archiveAccount(account.id);
+    _invalidateAccountDependents(ref);
     if (!context.mounted) return;
     ScaffoldMessenger.of(
       context,
@@ -474,7 +475,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
       );
     }
 
-    ref.invalidate(dashboardProvider);
+    _invalidateAccountDependents(ref);
     if (!mounted) return;
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -606,12 +607,22 @@ class _AdjustmentSheetState extends ConsumerState<_AdjustmentSheet> {
           note: note.isEmpty ? null : note,
         );
 
+    _invalidateAccountDependents(ref);
     if (!mounted) return;
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Balance adjustment saved')),
     );
   }
+}
+
+void _invalidateAccountDependents(WidgetRef ref) {
+  ref.invalidate(accountBalancesProvider);
+  ref.invalidate(transactionsProvider);
+  ref.invalidate(dashboardProvider);
+  ref.invalidate(reportsDashboardProvider);
+  ref.invalidate(quickAddTemplatesProvider);
+  ref.invalidate(recurringTransactionsProvider);
 }
 
 Color _parseColor(String? hex) {

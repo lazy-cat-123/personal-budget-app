@@ -107,6 +107,7 @@ class _DebtCard extends ConsumerWidget {
                     await ref
                         .read(financeRepositoryProvider)
                         .archiveDebt(progress.debt.id);
+                    _invalidateDebtDependents(ref);
                   },
                   itemBuilder: (context) => const [
                     PopupMenuItem(value: 'archive', child: Text('Archive')),
@@ -411,7 +412,7 @@ class _AddDebtSheetState extends ConsumerState<_AddDebtSheet> {
               : _noteController.text.trim(),
         );
 
-    ref.invalidate(dashboardProvider);
+    _invalidateDebtDependents(ref);
     if (!mounted) return;
     Navigator.of(context).pop();
     ScaffoldMessenger.of(
@@ -532,11 +533,20 @@ class _AddDebtPaymentSheetState extends ConsumerState<_AddDebtPaymentSheet> {
               : _noteController.text.trim(),
         );
 
-    ref.invalidate(dashboardProvider);
+    _invalidateDebtDependents(ref);
     if (!mounted) return;
     Navigator.of(context).pop();
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Payment saved')));
   }
+}
+
+void _invalidateDebtDependents(WidgetRef ref) {
+  ref.invalidate(debtsProvider);
+  ref.invalidate(accountBalancesProvider);
+  ref.invalidate(transactionsProvider);
+  ref.invalidate(dashboardProvider);
+  ref.invalidate(reportsDashboardProvider);
+  ref.invalidate(budgetUsageProvider);
 }

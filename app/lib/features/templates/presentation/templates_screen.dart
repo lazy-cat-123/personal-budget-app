@@ -154,6 +154,7 @@ class _TemplateCard extends ConsumerWidget {
     await ref
         .read(financeRepositoryProvider)
         .archiveQuickAddTemplate(entry.template.id);
+    _invalidateTemplateDependents(ref);
     if (!context.mounted) return;
     ScaffoldMessenger.of(
       context,
@@ -363,6 +364,7 @@ class _AddTemplateSheetState extends ConsumerState<_AddTemplateSheet> {
       );
     }
 
+    _invalidateTemplateDependents(ref);
     if (!mounted) return;
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -477,11 +479,20 @@ class _UseTemplateSheetState extends ConsumerState<_UseTemplateSheet> {
               : _noteController.text.trim(),
         );
 
-    ref.invalidate(dashboardProvider);
+    _invalidateTemplateDependents(ref);
     if (!mounted) return;
     Navigator.of(context).pop();
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Transaction added')));
   }
+}
+
+void _invalidateTemplateDependents(WidgetRef ref) {
+  ref.invalidate(quickAddTemplatesProvider);
+  ref.invalidate(transactionsProvider);
+  ref.invalidate(accountBalancesProvider);
+  ref.invalidate(dashboardProvider);
+  ref.invalidate(reportsDashboardProvider);
+  ref.invalidate(budgetUsageProvider);
 }

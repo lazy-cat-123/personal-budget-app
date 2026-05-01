@@ -87,9 +87,7 @@ class BudgetScreen extends ConsumerWidget {
 
     if (confirmed != true || !context.mounted) return;
     await ref.read(financeRepositoryProvider).archiveBudget(usage.budget.id);
-    ref.invalidate(budgetUsageProvider);
-    ref.invalidate(dashboardProvider);
-    ref.invalidate(reportsDashboardProvider);
+    _invalidateBudgetDependents(ref);
     if (!context.mounted) return;
     ScaffoldMessenger.of(
       context,
@@ -358,9 +356,7 @@ class _AddBudgetSheetState extends ConsumerState<_AddBudgetSheet> {
           startDate: startDate,
           alertThreshold: _alertThreshold,
         );
-    ref.invalidate(budgetUsageProvider);
-    ref.invalidate(dashboardProvider);
-    ref.invalidate(reportsDashboardProvider);
+    _invalidateBudgetDependents(ref);
 
     if (!mounted) return;
     Navigator.of(context).pop();
@@ -368,4 +364,10 @@ class _AddBudgetSheetState extends ConsumerState<_AddBudgetSheet> {
       context,
     ).showSnackBar(const SnackBar(content: Text('Budget saved')));
   }
+}
+
+void _invalidateBudgetDependents(WidgetRef ref) {
+  ref.invalidate(budgetUsageProvider);
+  ref.invalidate(dashboardProvider);
+  ref.invalidate(reportsDashboardProvider);
 }

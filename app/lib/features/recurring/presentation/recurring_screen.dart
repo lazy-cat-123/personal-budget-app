@@ -94,6 +94,7 @@ class _RecurringCard extends ConsumerWidget {
             } else if (value == 'pause') {
               await repository.pauseRecurringTransaction(entry.recurring.id);
               await notifications.cancelRecurringReminder(entry.recurring.id);
+              _invalidateRecurringDependents(ref);
             } else if (value == 'resume') {
               await repository.resumeRecurringTransaction(entry.recurring.id);
               await notifications.scheduleRecurringReminder(
@@ -104,11 +105,13 @@ class _RecurringCard extends ConsumerWidget {
                 dueDate: entry.recurring.nextDueDate,
                 reminderBeforeDays: entry.recurring.reminderBeforeDays,
               );
+              _invalidateRecurringDependents(ref);
             } else if (value == 'delete') {
               final confirmed = await _confirmDelete(context);
               if (confirmed != true) return;
               await repository.archiveRecurringTransaction(entry.recurring.id);
               await notifications.cancelRecurringReminder(entry.recurring.id);
+              _invalidateRecurringDependents(ref);
             }
           },
           itemBuilder: (context) => [
@@ -479,6 +482,7 @@ class _AddRecurringSheetState extends ConsumerState<_AddRecurringSheet> {
       reminderBeforeDays: _reminderBeforeDays,
     );
 
+    _invalidateRecurringDependents(ref);
     if (!mounted) return;
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -607,10 +611,20 @@ class _ConfirmRecurringSheetState
       await notifications.cancelRecurringReminder(widget.entry.recurring.id);
     }
 
+    _invalidateRecurringDependents(ref);
     if (!mounted) return;
     Navigator.of(context).pop();
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Transaction created')));
   }
+}
+
+void _invalidateRecurringDependents(WidgetRef ref) {
+  ref.invalidate(recurringTransactionsProvider);
+  ref.invalidate(transactionsProvider);
+  ref.invalidate(accountBalancesProvider);
+  ref.invalidate(dashboardProvider);
+  ref.invalidate(reportsDashboardProvider);
+  ref.invalidate(budgetUsageProvider);
 }

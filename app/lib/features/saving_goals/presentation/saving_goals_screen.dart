@@ -107,6 +107,7 @@ class _SavingGoalCard extends ConsumerWidget {
                     await ref
                         .read(financeRepositoryProvider)
                         .archiveSavingGoal(goal.goal.id);
+                    _invalidateSavingGoalDependents(ref);
                   },
                   itemBuilder: (context) => const [
                     PopupMenuItem(value: 'archive', child: Text('Archive')),
@@ -330,7 +331,7 @@ class _AddGoalSheetState extends ConsumerState<_AddGoalSheet> {
               : _noteController.text.trim(),
         );
 
-    ref.invalidate(dashboardProvider);
+    _invalidateSavingGoalDependents(ref);
     if (!mounted) return;
     Navigator.of(context).pop();
     ScaffoldMessenger.of(
@@ -451,11 +452,20 @@ class _AddContributionSheetState extends ConsumerState<_AddContributionSheet> {
               : _noteController.text.trim(),
         );
 
-    ref.invalidate(dashboardProvider);
+    _invalidateSavingGoalDependents(ref);
     if (!mounted) return;
     Navigator.of(context).pop();
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Contribution saved')));
   }
+}
+
+void _invalidateSavingGoalDependents(WidgetRef ref) {
+  ref.invalidate(savingGoalsProvider);
+  ref.invalidate(accountBalancesProvider);
+  ref.invalidate(transactionsProvider);
+  ref.invalidate(dashboardProvider);
+  ref.invalidate(reportsDashboardProvider);
+  ref.invalidate(budgetUsageProvider);
 }

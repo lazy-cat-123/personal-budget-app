@@ -9,10 +9,6 @@ class FinanceRepository {
 
   final AppDatabase _db;
 
-  Future<void> _backupDatabase() async {
-    await _db.backupToPhoneStorage();
-  }
-
   Stream<List<AccountBalance>> watchAccountBalances() {
     return _db
         .customSelect(
@@ -494,7 +490,7 @@ class FinanceRepository {
             );
       }
     });
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.budgetTransactions, _db.transactionTags]);
   }
 
   Future<void> addAccount({
@@ -515,7 +511,7 @@ class FinanceRepository {
             note: Value(note),
           ),
         );
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.accounts]);
   }
 
   Future<void> updateAccount({
@@ -539,7 +535,7 @@ class FinanceRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.accounts]);
   }
 
   Future<void> archiveAccount(int accountId) async {
@@ -550,7 +546,7 @@ class FinanceRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.accounts]);
   }
 
   Future<void> addAccountAdjustment({
@@ -568,7 +564,7 @@ class FinanceRepository {
             note: Value(note),
           ),
         );
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.budgetTransactions]);
   }
 
   Future<void> addCategory({
@@ -588,7 +584,6 @@ class FinanceRepository {
           ),
         );
     _db.markTablesUpdated([_db.categories]);
-    await _backupDatabase();
   }
 
   Future<void> updateCategory({
@@ -610,14 +605,12 @@ class FinanceRepository {
       ),
     );
     _db.markTablesUpdated([_db.categories]);
-    await _backupDatabase();
   }
 
   Future<void> archiveCategory(int categoryId) async {
     await (_db.update(_db.categories)..where((tbl) => tbl.id.equals(categoryId)))
         .write(const CategoriesCompanion(isArchived: Value(true)));
     _db.markTablesUpdated([_db.categories]);
-    await _backupDatabase();
   }
 
   Future<void> addTag({required String name, String? description}) async {
@@ -628,7 +621,6 @@ class FinanceRepository {
           ),
         );
     _db.markTablesUpdated([_db.tags]);
-    await _backupDatabase();
   }
 
   Future<void> updateTag({
@@ -643,7 +635,6 @@ class FinanceRepository {
       ),
     );
     _db.markTablesUpdated([_db.tags]);
-    await _backupDatabase();
   }
 
   Future<void> archiveTag(int tagId) async {
@@ -651,7 +642,6 @@ class FinanceRepository {
       const TagsCompanion(isArchived: Value(true)),
     );
     _db.markTablesUpdated([_db.tags, _db.transactionTags]);
-    await _backupDatabase();
   }
 
   Future<void> saveSettings(AppSettings settings) async {
@@ -676,7 +666,6 @@ class FinanceRepository {
       await _writeSetting('theme_mode', settings.themeMode);
     });
     _db.markTablesUpdated([_db.settings]);
-    await _backupDatabase();
   }
 
   Future<void> addBudget({
@@ -700,7 +689,6 @@ class FinanceRepository {
           ),
         );
     _db.markTablesUpdated([_db.budgets]);
-    await _backupDatabase();
   }
 
   Future<void> archiveBudget(int budgetId) async {
@@ -713,7 +701,6 @@ class FinanceRepository {
       ),
     );
     _db.markTablesUpdated([_db.budgets]);
-    await _backupDatabase();
   }
 
   Future<void> addSavingGoal({
@@ -734,7 +721,7 @@ class FinanceRepository {
             note: Value(note),
           ),
         );
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.savingGoals]);
   }
 
   Future<void> addGoalContribution({
@@ -784,7 +771,7 @@ class FinanceRepository {
             ),
           );
     });
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.goalContributions, _db.budgetTransactions]);
   }
 
   Future<void> archiveSavingGoal(int goalId) async {
@@ -796,7 +783,7 @@ class FinanceRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.savingGoals]);
   }
 
   Future<void> addDebt({
@@ -821,7 +808,7 @@ class FinanceRepository {
             note: Value(note),
           ),
         );
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.debts]);
   }
 
   Future<void> addDebtPayment({
@@ -888,7 +875,7 @@ class FinanceRepository {
         );
       }
     });
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.debts, _db.debtPayments, _db.budgetTransactions]);
   }
 
   Future<void> archiveDebt(int debtId) async {
@@ -898,7 +885,7 @@ class FinanceRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.debts]);
   }
 
   Future<void> addQuickAddTemplate({
@@ -921,7 +908,7 @@ class FinanceRepository {
             defaultNote: Value(defaultNote),
           ),
         );
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.quickAddTemplates]);
   }
 
   Future<void> updateQuickAddTemplate({
@@ -946,7 +933,7 @@ class FinanceRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.quickAddTemplates]);
   }
 
   Future<void> useQuickAddTemplate({
@@ -984,7 +971,7 @@ class FinanceRepository {
         ),
       );
     });
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.quickAddTemplates, _db.budgetTransactions]);
   }
 
   Future<void> archiveQuickAddTemplate(int templateId) async {
@@ -996,7 +983,7 @@ class FinanceRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.quickAddTemplates]);
   }
 
   Future<int> addRecurringTransaction({
@@ -1027,7 +1014,7 @@ class FinanceRepository {
             note: Value(note),
           ),
         );
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.recurringTransactions]);
     return id;
   }
 
@@ -1062,7 +1049,7 @@ class FinanceRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.recurringTransactions]);
   }
 
   Future<void> confirmRecurringTransaction({
@@ -1111,7 +1098,7 @@ class FinanceRepository {
         ),
       );
     });
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.recurringTransactions, _db.budgetTransactions]);
   }
 
   Future<void> pauseRecurringTransaction(int recurringId) async {
@@ -1123,7 +1110,7 @@ class FinanceRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.recurringTransactions]);
   }
 
   Future<void> resumeRecurringTransaction(int recurringId) async {
@@ -1135,7 +1122,7 @@ class FinanceRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.recurringTransactions]);
   }
 
   Future<void> archiveRecurringTransaction(int recurringId) async {
@@ -1147,7 +1134,7 @@ class FinanceRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
-    await _backupDatabase();
+    _db.markTablesUpdated([_db.recurringTransactions]);
   }
 
   Future<String> exportTransactionsCsv({DateTime? from, DateTime? to}) async {

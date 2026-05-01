@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../features/finance/domain/finance_models.dart';
@@ -19,8 +18,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _dailyReminderEnabled = false;
   TimeOfDay _dailyReminderTime = const TimeOfDay(hour: 20, minute: 0);
   String _themeMode = 'system';
-  bool _isRestoringBackup = false;
-  bool _isCleaningBackups = false;
 
   @override
   Widget build(BuildContext context) {
@@ -42,142 +39,108 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               return ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                _SectionCard(
-                  title: 'Display',
-                  child: Column(
-                    children: [
-                      DropdownButtonFormField<String>(
-                        initialValue: _currencyCode,
-                        decoration: const InputDecoration(
-                          labelText: 'Currency',
+                  _SectionCard(
+                    title: 'Display',
+                    child: Column(
+                      children: [
+                        DropdownButtonFormField<String>(
+                          initialValue: _currencyCode,
+                          decoration: const InputDecoration(
+                            labelText: 'Currency',
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'THB', child: Text('THB')),
+                            DropdownMenuItem(value: 'USD', child: Text('USD')),
+                            DropdownMenuItem(value: 'EUR', child: Text('EUR')),
+                            DropdownMenuItem(value: 'JPY', child: Text('JPY')),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() => _currencyCode = value);
+                            }
+                          },
                         ),
-                        items: const [
-                          DropdownMenuItem(value: 'THB', child: Text('THB')),
-                          DropdownMenuItem(value: 'USD', child: Text('USD')),
-                          DropdownMenuItem(value: 'EUR', child: Text('EUR')),
-                          DropdownMenuItem(value: 'JPY', child: Text('JPY')),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() => _currencyCode = value);
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        initialValue: _themeMode,
-                        decoration: const InputDecoration(labelText: 'Theme'),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'system',
-                            child: Text('System'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'light',
-                            child: Text('Light'),
-                          ),
-                          DropdownMenuItem(value: 'dark', child: Text('Dark')),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() => _themeMode = value);
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _SectionCard(
-                  title: 'Defaults',
-                  child: DropdownButtonFormField<int?>(
-                    initialValue: validDefaultAccountId,
-                    decoration: const InputDecoration(
-                      labelText: 'Default account',
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          initialValue: _themeMode,
+                          decoration: const InputDecoration(labelText: 'Theme'),
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'system',
+                              child: Text('System'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'light',
+                              child: Text('Light'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'dark',
+                              child: Text('Dark'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() => _themeMode = value);
+                            }
+                          },
+                        ),
+                      ],
                     ),
-                    items: [
-                      const DropdownMenuItem<int?>(
-                        value: null,
-                        child: Text('No default'),
-                      ),
-                      for (final account in accountItems)
-                        DropdownMenuItem<int?>(
-                          value: account.account.id,
-                          child: Text(account.account.name),
-                        ),
-                    ],
-                    onChanged: (value) =>
-                        setState(() => _defaultAccountId = value),
                   ),
-                ),
-                const SizedBox(height: 12),
-                _SectionCard(
-                  title: 'Daily Reminder',
-                  child: Column(
-                    children: [
-                      SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('Record expenses reminder'),
-                        subtitle: Text(_dailyReminderTime.format(context)),
-                        value: _dailyReminderEnabled,
-                        onChanged: (value) =>
-                            setState(() => _dailyReminderEnabled = value),
+                  const SizedBox(height: 12),
+                  _SectionCard(
+                    title: 'Defaults',
+                    child: DropdownButtonFormField<int?>(
+                      initialValue: validDefaultAccountId,
+                      decoration: const InputDecoration(
+                        labelText: 'Default account',
                       ),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: OutlinedButton.icon(
-                          onPressed: _pickReminderTime,
-                          icon: const Icon(Icons.schedule),
-                          label: const Text('Reminder time'),
+                      items: [
+                        const DropdownMenuItem<int?>(
+                          value: null,
+                          child: Text('No default'),
                         ),
-                      ),
-                    ],
+                        for (final account in accountItems)
+                          DropdownMenuItem<int?>(
+                            value: account.account.id,
+                            child: Text(account.account.name),
+                          ),
+                      ],
+                      onChanged: (value) =>
+                          setState(() => _defaultAccountId = value),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                _SectionCard(
-                  title: 'Data Backup',
-                  child: Column(
-                    children: [
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.restore),
-                        title: const Text('Restore app backup'),
-                        subtitle: const Text(
-                          'Uses the backup folder automatically',
+                  const SizedBox(height: 12),
+                  _SectionCard(
+                    title: 'Daily Reminder',
+                    child: Column(
+                      children: [
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Record expenses reminder'),
+                          subtitle: Text(_dailyReminderTime.format(context)),
+                          value: _dailyReminderEnabled,
+                          onChanged: (value) =>
+                              setState(() => _dailyReminderEnabled = value),
                         ),
-                        trailing: _isRestoringBackup
-                            ? const SizedBox.square(
-                                dimension: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.chevron_right),
-                        onTap: _isRestoringBackup ? null : _restoreBackup,
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.cleaning_services_outlined),
-                        title: const Text('Clean old backup files'),
-                        subtitle: const Text('Keep only the latest backup'),
-                        trailing: _isCleaningBackups
-                            ? const SizedBox.square(
-                                dimension: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.chevron_right),
-                        onTap: _isCleaningBackups ? null : _cleanBackups,
-                      ),
-                    ],
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: OutlinedButton.icon(
+                            onPressed: _pickReminderTime,
+                            icon: const Icon(Icons.schedule),
+                            label: const Text('Reminder time'),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                FilledButton.icon(
-                  onPressed: _saveSettings,
-                  icon: const Icon(Icons.save),
-                  label: const Text('Save Settings'),
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    onPressed: _saveSettings,
+                    icon: const Icon(Icons.save),
+                    label: const Text('Save Settings'),
+                  ),
+                ],
               );
             },
             error: (error, stackTrace) => Center(child: Text('$error')),
@@ -247,83 +210,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Settings saved')));
-  }
-
-  Future<void> _restoreBackup() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Restore backup?'),
-        content: const Text(
-          'This will replace the current app data with the latest backup file.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Restore'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    setState(() => _isRestoringBackup = true);
-    try {
-      final database = ref.read(databaseProvider);
-      final restoredFromFolder = await database.restoreFromPhoneBackupFolder();
-      final restored = restoredFromFolder
-          ? true
-          : await database.restoreFromPhoneBackupPicker();
-      if (!mounted) return;
-      if (!restored) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No valid app backup found')),
-        );
-        return;
-      }
-
-      ref.invalidate(databaseProvider);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Backup restored. Reopen the app now.')),
-      );
-      await Future<void>.delayed(const Duration(milliseconds: 900));
-      await SystemNavigator.pop();
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not restore backup: $error')));
-    } finally {
-      if (mounted) setState(() => _isRestoringBackup = false);
-    }
-  }
-
-  Future<void> _cleanBackups() async {
-    setState(() => _isCleaningBackups = true);
-    try {
-      final cleaned = await ref.read(databaseProvider).cleanPhoneBackupFolder();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            cleaned
-                ? 'Old backup files cleaned'
-                : 'Android needs permission to delete old backup files',
-          ),
-        ),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not clean backups: $error')));
-    } finally {
-      if (mounted) setState(() => _isCleaningBackups = false);
-    }
   }
 }
 
